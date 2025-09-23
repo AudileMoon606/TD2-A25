@@ -1,0 +1,4 @@
+/home/gigl/INF1015/TD2-A25-Fichiers/build/CMakeFiles/ProjetTD2.dir
+/home/gigl/INF1015/TD2-A25-Fichiers/build/CMakeFiles/ProjetTD2_couverture.dir
+/home/gigl/INF1015/TD2-A25-Fichiers/build/CMakeFiles/edit_cache.dir
+/home/gigl/INF1015/TD2-A25-Fichiers/build/CMakeFiles/rebuild_cache.dir

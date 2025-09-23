@@ -1,0 +1,20 @@
+[
+{
+  "directory": "/home/gigl/INF1015/TD2-A25-Fichiers/build",
+  "command": "/usr/bin/g++  -isystem /home/gigl/INF1015/TD2-A25-Fichiers/include -g -std=c++20 -fsigned-char -Wall -Wextra -Wpedantic -Woverloaded-virtual -Wno-unknown-pragmas -Wno-enum-compare -Wshadow --coverage -o CMakeFiles/ProjetTD2.dir/bibliotheque_cours/bibliotheque_cours.cpp.o -c /home/gigl/INF1015/TD2-A25-Fichiers/bibliotheque_cours/bibliotheque_cours.cpp",
+  "file": "/home/gigl/INF1015/TD2-A25-Fichiers/bibliotheque_cours/bibliotheque_cours.cpp",
+  "output": "CMakeFiles/ProjetTD2.dir/bibliotheque_cours/bibliotheque_cours.cpp.o"
+},
+{
+  "directory": "/home/gigl/INF1015/TD2-A25-Fichiers/build",
+  "command": "/usr/bin/g++  -isystem /home/gigl/INF1015/TD2-A25-Fichiers/include -g -std=c++20 -fsigned-char -Wall -Wextra -Wpedantic -Woverloaded-virtual -Wno-unknown-pragmas -Wno-enum-compare -Wshadow --coverage -o CMakeFiles/ProjetTD2.dir/bibliotheque_cours/verification_allocation.cpp.o -c /home/gigl/INF1015/TD2-A25-Fichiers/bibliotheque_cours/verification_allocation.cpp",
+  "file": "/home/gigl/INF1015/TD2-A25-Fichiers/bibliotheque_cours/verification_allocation.cpp",
+  "output": "CMakeFiles/ProjetTD2.dir/bibliotheque_cours/verification_allocation.cpp.o"
+},
+{
+  "directory": "/home/gigl/INF1015/TD2-A25-Fichiers/build",
+  "command": "/usr/bin/g++  -isystem /home/gigl/INF1015/TD2-A25-Fichiers/include -g -std=c++20 -fsigned-char -Wall -Wextra -Wpedantic -Woverloaded-virtual -Wno-unknown-pragmas -Wno-enum-compare -Wshadow --coverage -o CMakeFiles/ProjetTD2.dir/td2.cpp.o -c /home/gigl/INF1015/TD2-A25-Fichiers/td2.cpp",
+  "file": "/home/gigl/INF1015/TD2-A25-Fichiers/td2.cpp",
+  "output": "CMakeFiles/ProjetTD2.dir/td2.cpp.o"
+}
+]
