@@ -1,3 +1,11 @@
+/*
+ * Fichier: structures.hpp
+ * Auteurs: Majid Khauly (2434522), Mohamed Elbahrawy (2336883)
+ * Description: Définition des classes représentant une collection de groupes musicaux et leurs musiciens.
+ *              Contient des listes dynamiques minimalistes (sans std::vector) pour illustrer la gestion manuelle.
+ * Date: 23 septembre 2025
+ */
+
 #pragma once
 // Structures mémoires pour une collection de groupes musicaux.
 // Version convertie de struct -> class :

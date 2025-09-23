@@ -14,7 +14,6 @@ Date de la remise : Avant 23h30 le dimanche 28 septembre 2025.
 
 */
 
-#pragma region "Includes"//{
 #define _CRT_SECURE_NO_WARNINGS // On permet d'utiliser les fonctions de copies de chaînes qui sont considérées non sécuritaires.
 
 #include "structures.hpp"      // Structures de données pour la collection de groupes musicaux en mémoire.
@@ -35,7 +34,12 @@ Date de la remise : Avant 23h30 le dimanche 28 septembre 2025.
 using namespace std;
 using namespace iter;
 
-#pragma endregion//}
+// Constantes (pas de variables globales). Évite les nombres magiques (règle 62) et nommage explicite.
+constexpr int  kCapaciteInitialeListe              = 1;  // Capacité minimale d'une liste dynamique.
+constexpr int  kFacteurAgrandissementCapacite      = 2;  // Facteur de croissance lors de la réallocation.
+constexpr char kLigneSeparationListeGroupes[]      = "\n\033[36m▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\033[0m\n";
+constexpr char kLigneSeparationPrincipale[]        = "\n\033[35m════════════════════════════════════════\033[0m\n";
+constexpr int  kIndicePremierElement               = 0;  // Indice du premier élément d'une liste.
 
 typedef uint8_t UInt8;
 typedef uint16_t UInt16;
@@ -68,7 +72,7 @@ string lireString(istream& fichier)
 void ajouterMusicien(ListeMusiciens& liste, Musicien* musicien)
 {
 	if (liste.nElements() >= liste.capacite()) {
-		int nouvelleCapacite = max(1, liste.capacite() * 2);
+		int nouvelleCapacite = max(kCapaciteInitialeListe, liste.capacite() * kFacteurAgrandissementCapacite);
 		Musicien** nouveauTableau = new Musicien*[nouvelleCapacite];
 		for (int i = 0; i < liste.nElements(); i++) {
 			nouveauTableau[i] = liste.elements()[i];
@@ -81,16 +85,10 @@ void ajouterMusicien(ListeMusiciens& liste, Musicien* musicien)
 }
 
 
-/*Fonction pour ajouter un groupe à une liste, qui fait la réallocation du tableau en doublant sa capacité 
-s’il ne reste pas de place en s’assurant qu’il y a au moins une capacité d’un élément (sinon, le double de 
-zéro  resterait  zéro).  En  C++  il  n’est  pas  possible  de  changer  la  taille  d’une  allocation,  alors  il  faut 
-allouer  un  nouveau  tableau,  copier  de  l’ancien  au  nouveau  et  détruire  l’ancien  tableau  trop  petit.    Le 
-groupe à ajouter est déjà alloué, il faut simplement ajouter à la liste le pointeur vers le groupe existant.*/
-
 void ajouterGroupe(ListeGroupes& liste, Groupe* groupe)
 {
 	if (liste.nElements() >= liste.capacite()) {
-		int nouvelleCapacite = max(1, liste.capacite() * 2);
+		int nouvelleCapacite = max(kCapaciteInitialeListe, liste.capacite() * kFacteurAgrandissementCapacite);
 		Groupe** nouveauTableau = new Groupe*[nouvelleCapacite];
 		for (int i = 0; i < liste.nElements(); i++) {
 			nouveauTableau[i] = liste.elements()[i];
@@ -101,12 +99,6 @@ void ajouterGroupe(ListeGroupes& liste, Groupe* groupe)
 	}
 	liste.elements()[liste.nElements()++] = groupe;
 }
-
-
-/* Fonction pour enlever un groupe d’une liste, qui prend un pointeur vers un groupe et enlève ce groupe 
-de  la  liste  sans  détruire  le  groupe.    L’ajout  du  groupe  utilisait  un  groupe  existant,  et  le  groupe  existe 
-encore après avoir enlevé le groupe de la collection, ces fonctions sont donc symétriques. Des fonctions 
-séparées serviront à créer et détruire les groupes. */
 
 void enleverGroupe(ListeGroupes& liste, Groupe* groupe)
 {
@@ -120,49 +112,37 @@ void enleverGroupe(ListeGroupes& liste, Groupe* groupe)
 	}
 }
 
-
-/* Fonction  pour  trouver  un  musicien,  qui  cherche  dans  tous  les  groupes  d’une  collection  un  musicien 
-par son nom, et retourne un  pointeur  vers  ce musicien (ou nullptr  si le musicien n’est pas trouvé). On 
-suppose que le nom d’un musicien l’identifie de manière unique, i.e. si on voit le même nom deux fois, 
-c’est le même musicien. */
 Musicien* trouverMusicien(const ListeGroupes& listeGroupes, const string& nom)
 {
-	span<Groupe*> groupes(listeGroupes.elements(), static_cast<size_t>(listeGroupes.nElements()));
-	for (Groupe* groupe : groupes) {
-		span<Musicien*> membres(groupe->membres().elements(), groupe->membres().nElements());
-		for (Musicien* musicien : membres) {
-			if (musicien->nom() == nom) {
-				return musicien;
-			}
-		}
-	}
-	return nullptr;
+    for (int i = 0; i < listeGroupes.nElements(); i++) {
+        Groupe* groupe = listeGroupes.elements()[i];
+        for (int j = 0; j < groupe->membres().nElements(); j++) {
+            Musicien* musicien = groupe->membres().elements()[j];
+            if (musicien->nom() == nom) {
+                return musicien;
+            }
+        }
+    }
+    return nullptr;
 }
-
-/* Fonctions pour créer une collection à partir du fichier (creerListe/lireGroupe/lireMusicien), 
-qui allouent la capacité nécessaire pour les groupes dans le fichier, qui charge les données de chacun de 
-ces groupes; chaque groupe contient une liste de musiciens, qu'il faut aussi allouer, et il faut allouer la 
-mémoire pour chaque musicien. Attention : Le fichier contient certains musiciens plus d'une fois, mais 
-nous voulons qu'en mémoire l'allocation soit faite une seule fois par musicien différent (on utilisera la 
-fonction pour trouver un musicien par nom, pour vérifier si un musicien a déjà été alloué). */
 
 Musicien* lireMusicien(istream& fichier, const ListeGroupes& listeGroupes)
 {
-	Musicien musicien{}; // défaut
-	musicien.nom()            = lireString(fichier);
-	musicien.pays()           = lireString(fichier);
-	musicien.anneeNaissance() = lireUint16(fichier);
+    // Lecture des champs (initialisation immédiate plutôt que d'allouer puis assigner)
+    string nom            = lireString(fichier);
+    string pays           = lireString(fichier);
+    int    anneeNaissance = lireUint16(fichier);
 
-	// Chercher si le musicien existe déjà
-	Musicien* musicienExistant = trouverMusicien(listeGroupes, musicien.nom());
+    // Chercher si le musicien existe déjà (évite duplication)
+    Musicien* musicienExistant = trouverMusicien(listeGroupes, nom);
 	if (musicienExistant != nullptr) {
-		return musicienExistant;
-	}
+        return musicienExistant;
+    }
 
-	// Créer un nouveau musicien (copie des champs lus)
-	Musicien* nouveauMusicien = new Musicien(musicien);
-	cout << "Création du musicien: " << nouveauMusicien->nom() << endl;
-	return nouveauMusicien;
+    // Créer un nouveau musicien directement avec les valeurs lues
+    Musicien* nouveauMusicien = new Musicien(nom, pays, anneeNaissance, ListeGroupes{});
+    cout << "Création du musicien: " << nouveauMusicien->nom() << endl;
+    return nouveauMusicien;
 }
 
 Groupe* lireGroupe(istream& fichier, ListeGroupes& listeGroupes)
@@ -191,10 +171,10 @@ ListeGroupes creerListe(string nomFichier)
 	ifstream fichier(nomFichier, ios::binary);
 	fichier.exceptions(ios::failbit);
 
-	int nElements = lireUint16(fichier);
+	int nGroupes = lireUint16(fichier);
 
 	ListeGroupes listeGroupes; // défaut (0,0,nullptr)
-	for (int i = 0; i < nElements; i++) {
+	for (int i = 0; i < nGroupes; i++) {
 		Groupe* groupe = lireGroupe(fichier, listeGroupes);
 		ajouterGroupe(listeGroupes, groupe);
 	}
@@ -246,22 +226,22 @@ void afficherGroupe(const Groupe& groupe)
 
 void afficherListeGroupes(const ListeGroupes& listeGroupes)
 {
-	static const string ligneDeSeparation = "\n\033[36m▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\033[0m\n";
-	cout << ligneDeSeparation;
+	cout << kLigneSeparationListeGroupes;
 	span<Groupe*> groupes(listeGroupes.elements(), static_cast<size_t>(listeGroupes.nElements()));
 	for (Groupe* groupe : groupes) {
 		afficherGroupe(*groupe);
-		cout << ligneDeSeparation;
+		cout << kLigneSeparationListeGroupes;
 	}
 }
 
 void afficherGroupesMusicien(const ListeGroupes& listeGroupes, const string& nomMusicien)
 {
 	const Musicien* musicien = trouverMusicien(listeGroupes, nomMusicien);
-	if (musicien == nullptr)
-		cout << "Aucun musicien de ce nom" << endl;
-	else
-		afficherListeGroupes(musicien->joueDans());
+	if (musicien == nullptr) {
+        cout << "Aucun musicien de ce nom" << endl;
+    } else {
+        afficherListeGroupes(musicien->joueDans());
+    }
 }
 
 int main()
@@ -270,14 +250,12 @@ int main()
 
 	//int* fuite = new int;
 
-	static const string ligneDeSeparation = "\n\033[35m════════════════════════════════════════\033[0m\n";
-
 	ListeGroupes listeGroupes = creerListe("groupes.bin");
 
-	cout << ligneDeSeparation << "Le premier groupe de la liste est:" << endl;
-	afficherGroupe(*listeGroupes.elements()[0]);
+	cout << kLigneSeparationPrincipale << "Le premier groupe de la liste est:" << endl;
+	afficherGroupe(*listeGroupes.elements()[kIndicePremierElement]);
 
-	cout << ligneDeSeparation << "Les groupes sont:" << endl;
+	cout << kLigneSeparationPrincipale << "Les groupes sont:" << endl;
 	afficherListeGroupes(listeGroupes);
 
 	Musicien* daveGrohl = trouverMusicien(listeGroupes, "Dave Grohl");
@@ -285,14 +263,14 @@ int main()
 		daveGrohl->pays() = "États-Unis";
 	}
 
-	cout << ligneDeSeparation << "Liste des groupes où Dave Grohl joue sont:" << endl;
+	cout << kLigneSeparationPrincipale << "Liste des groupes où Dave Grohl joue sont:" << endl;
 	afficherGroupesMusicien(listeGroupes, "Dave Grohl");
 
-	Groupe* premierGroupe = listeGroupes.elements()[0];
+	Groupe* premierGroupe = listeGroupes.elements()[kIndicePremierElement];
 	enleverGroupe(listeGroupes, premierGroupe);
 	detruireGroupe(premierGroupe);
 
-	cout << ligneDeSeparation << "Les groupes sont maintenant:" << endl;
+	cout << kLigneSeparationPrincipale << "Les groupes sont maintenant:" << endl;
 	afficherListeGroupes(listeGroupes);
 
 	detruireListeGroupes(listeGroupes);
