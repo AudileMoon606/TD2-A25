@@ -64,40 +64,40 @@ string lireString(istream& fichier)
 // Ajoute un musicien (tableau dynamique de pointeurs, sans copier l'objet Musicien).
 void ajouterMusicien(ListeMusiciens& liste, Musicien* musicien)
 {
-	if (liste.nElements >= liste.capacite) {
-		int nouvelleCapacite = max(CAPACITE_INITIALE, liste.capacite * FACTEUR_AGRANDISSEMENT);
+	if (liste.nElements() >= liste.capacite()) {
+		int nouvelleCapacite = max(CAPACITE_INITIALE, liste.capacite() * FACTEUR_AGRANDISSEMENT);
 		Musicien** nouveauTableau = new Musicien*[nouvelleCapacite];
-		for (int i : range(liste.nElements))
-			nouveauTableau[i] = liste.elements[i];
-		delete[] liste.elements;
-		liste.elements = nouveauTableau;
-		liste.capacite = nouvelleCapacite;
+		for (int i : range(liste.nElements()))
+			nouveauTableau[i] = liste.elements()[i];
+		delete[] liste.elements();
+		liste.elements() = nouveauTableau;
+		liste.capacite() = nouvelleCapacite;
 	}
-	liste.elements[liste.nElements++] = musicien;
+	liste.elements()[liste.nElements()++] = musicien;
 }
 
 // Ajoute un groupe (même logique que pour ajouterMusicien).
 void ajouterGroupe(ListeGroupes& liste, Groupe* groupe)
 {
-	if (liste.nElements >= liste.capacite) {
-		int nouvelleCapacite = max(CAPACITE_INITIALE, liste.capacite * FACTEUR_AGRANDISSEMENT);
+	if (liste.nElements() >= liste.capacite()) {
+		int nouvelleCapacite = max(CAPACITE_INITIALE, liste.capacite() * FACTEUR_AGRANDISSEMENT);
 		Groupe** nouveauTableau = new Groupe*[nouvelleCapacite];
-		for (int i : range(liste.nElements))
-			nouveauTableau[i] = liste.elements[i];
-		delete[] liste.elements;
-		liste.elements = nouveauTableau;
-		liste.capacite = nouvelleCapacite;
+		for (int i : range(liste.nElements()))
+			nouveauTableau[i] = liste.elements()[i];
+		delete[] liste.elements();
+		liste.elements() = nouveauTableau;
+		liste.capacite() = nouvelleCapacite;
 	}
-	liste.elements[liste.nElements++] = groupe;
+	liste.elements()[liste.nElements()++] = groupe;
 }
 
 // Enlève un groupe (ne détruit pas l'objet pointé). Ordre non conservé.
 void enleverGroupe(ListeGroupes& liste, Groupe* groupe)
 {
-	for (int i : range(liste.nElements)) {
-		if (liste.elements[i] == groupe) {
-			liste.elements[i] = liste.elements[liste.nElements - 1];
-			liste.nElements--; break;
+	for (int i : range(liste.nElements())) {
+		if (liste.elements()[i] == groupe) {
+			liste.elements()[i] = liste.elements()[liste.nElements() - 1];
+			liste.nElements()--; break;
 		}
 	}
 }
@@ -105,11 +105,11 @@ void enleverGroupe(ListeGroupes& liste, Groupe* groupe)
 // Trouve un musicien par nom via un parcours des groupes (utilise span pour illustrer le gabarit).
 Musicien* trouverMusicien(const ListeGroupes& listeGroupes, const string& nom)
 {
-	span<Groupe*> groupes(listeGroupes.elements, static_cast<size_t>(listeGroupes.nElements));
+	span<Groupe*> groupes(listeGroupes.elements(), static_cast<size_t>(listeGroupes.nElements()));
 	for (Groupe* g : groupes) {
-		span<Musicien*> membres(g->membres.elements, static_cast<size_t>(g->membres.nElements));
+		span<Musicien*> membres(g->membres().elements(), static_cast<size_t>(g->membres().nElements()));
 		for (Musicien* m : membres) {
-			if (m->nom == nom)
+			if (m->nom() == nom)
 				return m;
 		}
 	}
@@ -124,8 +124,8 @@ Musicien* lireMusicien(istream& fichier, const ListeGroupes& listeGroupes)
 	int anneeNaissance = lireUint16(fichier);
 	if (Musicien* existant = trouverMusicien(listeGroupes, nom))
 		return existant;
-	Musicien* nouveau = new Musicien{nom, pays, anneeNaissance, ListeGroupes{}};
-	cout << "Création du musicien: " << nouveau->nom << endl; // Debug (pas de doublons attendus)
+	Musicien* nouveau = new Musicien(nom, pays, anneeNaissance, ListeGroupes{});
+	cout << "Création du musicien: " << nouveau->nom() << endl; // Debug (pas de doublons attendus)
 	return nouveau;
 }
 
@@ -133,17 +133,17 @@ Musicien* lireMusicien(istream& fichier, const ListeGroupes& listeGroupes)
 Groupe* lireGroupe(istream& fichier, ListeGroupes& listeGroupes)
 {
 	Groupe* groupe = new Groupe{};
-	groupe->nom = lireString(fichier);
-	groupe->genre = lireString(fichier);
-	groupe->anneeFormation = lireUint16(fichier);
-	groupe->membres.nElements = lireUint8(fichier);
-	groupe->membres.capacite = groupe->membres.nElements;
-	groupe->membres.elements = new Musicien*[groupe->membres.capacite];
-	cout << groupe->nom << endl; // Pour suivre la lecture des groupes
-	for (int i : range(groupe->membres.nElements)) {
+	groupe->nom() = lireString(fichier);
+	groupe->genre() = lireString(fichier);
+	groupe->anneeFormation() = lireUint16(fichier);
+	groupe->membres().nElements() = lireUint8(fichier);
+	groupe->membres().capacite() = groupe->membres().nElements();
+	groupe->membres().elements() = new Musicien*[groupe->membres().capacite()];
+	cout << groupe->nom() << endl; // Pour suivre la lecture des groupes
+	for (int i : range(groupe->membres().nElements())) {
 		Musicien* m = lireMusicien(fichier, listeGroupes);
-		groupe->membres.elements[i] = m;
-		ajouterGroupe(m->joueDans, groupe);
+		groupe->membres().elements()[i] = m;
+		ajouterGroupe(m->joueDans(), groupe);
 	}
 	return groupe;
 }
@@ -153,7 +153,7 @@ ListeGroupes creerListe(string nomFichier)
 {
 	ifstream fichier(nomFichier, ios::binary); fichier.exceptions(ios::failbit);
 	int nGroupes = lireUint16(fichier);
-	ListeGroupes liste{}; // vide (0,0,nullptr)
+	ListeGroupes liste; // vide (0,0,nullptr)
 	for (int i : range(nGroupes)) {
 		Groupe* g = lireGroupe(fichier, liste);
 		ajouterGroupe(liste, g);
@@ -164,47 +164,47 @@ ListeGroupes creerListe(string nomFichier)
 // Détruit un groupe et supprime les musiciens devenus orphelins.
 void detruireGroupe(Groupe* groupe)
 {
-	for (int i : range(groupe->membres.nElements)) {
-		Musicien* m = groupe->membres.elements[i];
-		enleverGroupe(m->joueDans, groupe);
-		if (m->joueDans.nElements == 0) { // Orphelin
-			cout << "Destruction du musicien: " << m->nom << endl;
-			delete[] m->joueDans.elements;
+	for (int i : range(groupe->membres().nElements())) {
+		Musicien* m = groupe->membres().elements()[i];
+		enleverGroupe(m->joueDans(), groupe);
+		if (m->joueDans().nElements() == 0) { // Orphelin
+			cout << "Destruction du musicien: " << m->nom() << endl;
+			delete[] m->joueDans().elements();
 			delete m;
 		}
 	}
-	delete[] groupe->membres.elements;
+	delete[] groupe->membres().elements();
 	delete groupe;
 }
 
 // Détruit toute la liste et son contenu.
 void detruireListeGroupes(ListeGroupes& liste)
 {
-	for (int i : range(liste.nElements))
-		detruireGroupe(liste.elements[i]);
-	delete[] liste.elements;
-	liste.elements = nullptr;
-	liste.nElements = 0;
-	liste.capacite = 0;
+	for (int i : range(liste.nElements()))
+		detruireGroupe(liste.elements()[i]);
+	delete[] liste.elements();
+	liste.elements() = nullptr;
+	liste.nElements() = 0;
+	liste.capacite() = 0;
 }
 
 // Affiche un musicien.
 void afficherMusicien(const Musicien& m)
-{ cout << "  " << m.nom << ", " << m.pays << ", " << m.anneeNaissance << endl; }
+{ cout << "  " << m.nom() << ", " << m.pays() << ", " << m.anneeNaissance() << endl; }
 
 // Affiche un groupe et ses membres.
 void afficherGroupe(const Groupe& g)
 {
-	cout << g.nom << ", " << g.genre << ", " << g.anneeFormation << endl;
-	for (int i : range(g.membres.nElements))
-		afficherMusicien(*g.membres.elements[i]);
+	cout << g.nom() << ", " << g.genre() << ", " << g.anneeFormation() << endl;
+	for (int i : range(g.membres().nElements()))
+		afficherMusicien(*g.membres().elements()[i]);
 }
 
 // Affiche une liste de groupes (utilise une ligne Unicode, style gabarit).
 void afficherListeGroupes(const ListeGroupes& liste)
 {
 	cout << LIGNE_SEPARATION_LISTE;
-	span<Groupe*> groupes(liste.elements, static_cast<size_t>(liste.nElements));
+	span<Groupe*> groupes(liste.elements(), static_cast<size_t>(liste.nElements()));
 	for (Groupe* g : groupes) {
 		afficherGroupe(*g);
 		cout << LIGNE_SEPARATION_LISTE;
@@ -215,7 +215,7 @@ void afficherListeGroupes(const ListeGroupes& liste)
 void afficherGroupesMusicien(const ListeGroupes& liste, const string& nomMusicien)
 {
 	if (const Musicien* m = trouverMusicien(liste, nomMusicien))
-		afficherListeGroupes(m->joueDans);
+		afficherListeGroupes(m->joueDans());
 	else
 		cout << "Aucun musicien de ce nom" << endl;
 }
@@ -228,20 +228,20 @@ int main()
 	ListeGroupes listeGroupes = creerListe("groupes.bin");
 
 	cout << LIGNE_SEPARATION_PRINCIPALE << "Le premier groupe de la liste est:" << endl;
-	afficherGroupe(*listeGroupes.elements[INDICE_PREMIER]); // Devrait être Nirvana
+	afficherGroupe(*listeGroupes.elements()[INDICE_PREMIER]); // Devrait être Nirvana
 
 	cout << LIGNE_SEPARATION_PRINCIPALE << "Les groupes sont:" << endl;
 	afficherListeGroupes(listeGroupes); // 7 groupes
 
 	// Modification pays de Dave Grohl.
 	if (Musicien* dave = trouverMusicien(listeGroupes, "Dave Grohl"))
-		dave->pays = "États-Unis";
+		dave->pays() = "États-Unis";
 
 	cout << LIGNE_SEPARATION_PRINCIPALE << "Liste des groupes où Dave Grohl joue sont:" << endl;
 	afficherGroupesMusicien(listeGroupes, "Dave Grohl"); // Nirvana + Foo Fighters
 
 	// Destruction du premier groupe (Nirvana) et conséquences sur musiciens.
-	Groupe* premier = listeGroupes.elements[INDICE_PREMIER];
+	Groupe* premier = listeGroupes.elements()[INDICE_PREMIER];
 	enleverGroupe(listeGroupes, premier);
 	detruireGroupe(premier); // Détruit Kurt Cobain & Krist Novoselic si orphelins.
 
